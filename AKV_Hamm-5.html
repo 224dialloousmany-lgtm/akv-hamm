@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="theme-color" content="#c8922a"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="AKV Hamm"/>
+<title>AKV Hamm – Membres</title>
+<link rel="manifest" href="data:application/json,{&quot;name&quot;:&quot;AKV Hamm&quot;,&quot;short_name&quot;:&quot;AKV Hamm&quot;,&quot;start_url&quot;:&quot;.&quot;,&quot;display&quot;:&quot;standalone&quot;,&quot;background_color&quot;:&quot;%230d0d0d&quot;,&quot;theme_color&quot;:&quot;%23c8922a&quot;}"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--gold:#c8922a;--gold-light:#e8b84b;--gold-dark:#9a6e1a;--bg:#0d0d0d;--bg2:#161616;--bg3:#1e1e1e;--card:#1a1a1a;--border:rgba(200,146,42,0.18);--text:#f0ebe0;--text2:#a09070;--red:#e05555;--green:#4caf7d;--radius:14px;}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;max-width:480px;margin:0 auto;}
+
+/* ── SPLASH ── */
+#splash{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:16px;transition:opacity .6s;}
+#splash.hidden{opacity:0;pointer-events:none;}
+.splash-globe{font-size:80px;animation:pulse 1.8s ease-in-out infinite;}
+.splash-title{font-family:'Playfair Display',serif;font-size:24px;color:var(--gold);text-align:center;line-height:1.3;}
+.splash-sub{font-size:13px;color:var(--text2);text-align:center;letter-spacing:.04em;}
+.splash-bar{width:160px;height:3px;background:var(--bg3);border-radius:3px;overflow:hidden;margin-top:8px;}
+.splash-progress{height:100%;background:var(--gold);border-radius:3px;animation:load 1.6s ease forwards;}
+@keyframes load{from{width:0}to{width:100%}}
+@keyframes pulse{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
+
+/* ── LOGIN ── */
+#login-screen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;padding:28px 24px;gap:0;transition:opacity .3s;}
+#login-screen.hidden{opacity:0;pointer-events:none;display:none;}
+.login-logo{font-size:56px;margin-bottom:10px;}
+.login-assoc{font-family:'Playfair Display',serif;font-size:20px;color:var(--gold);text-align:center;line-height:1.3;margin-bottom:4px;}
+.login-city{font-size:12px;color:var(--text2);text-align:center;letter-spacing:.05em;margin-bottom:28px;}
+.login-card{width:100%;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:24px 20px;display:flex;flex-direction:column;gap:16px;}
+.login-tabs{display:flex;gap:0;background:var(--bg3);border-radius:10px;padding:4px;}
+.login-tab{flex:1;padding:10px;border:none;background:transparent;color:var(--text2);font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;border-radius:7px;cursor:pointer;transition:all .2s;}
+.login-tab.active{background:var(--gold);color:#000;}
+.lfield{display:flex;flex-direction:column;gap:5px;}
+.llabel{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;}
+.linput{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:13px 14px;color:var(--text);font-size:15px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s;}
+.linput:focus{border-color:var(--gold);}
+.lbtn{width:100%;padding:14px;border-radius:10px;border:none;background:var(--gold);color:#000;font-size:15px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;transition:opacity .2s;}
+.lbtn:active{opacity:.85;}
+.lerror{color:var(--red);font-size:12px;text-align:center;display:none;padding:4px;}
+.lhint{font-size:11px;color:var(--text2);text-align:center;line-height:1.6;padding:2px 0;}
+
+/* ── INSTALL BANNER ── */
+#install-banner{background:linear-gradient(135deg,var(--gold-dark),var(--gold));color:#000;padding:11px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+#install-banner.hidden{display:none;}
+.ibtext{flex:1;font-size:12px;font-weight:600;line-height:1.4;}
+.ibbtn{background:#000;color:var(--gold);border:none;border-radius:8px;padding:8px 13px;font-size:12px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;white-space:nowrap;}
+
+/* ── HEADER ── */
+header{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 16px 10px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.logo-area{display:flex;align-items:center;gap:10px;}
+.logo-ico{font-size:26px;}
+.logo-text{font-family:'Playfair Display',serif;font-size:15px;color:var(--gold);line-height:1.2;}
+.logo-sub{font-size:10px;color:var(--text2);}
+.hdr-right{display:flex;align-items:center;gap:8px;}
+.role-pill{padding:5px 11px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid;}
+.role-pill.admin{background:rgba(200,146,42,.12);color:var(--gold);border-color:rgba(200,146,42,.3);}
+.role-pill.membre{background:rgba(76,175,125,.1);color:var(--green);border-color:rgba(76,175,125,.3);}
+.add-btn{background:var(--gold);color:#000;border:none;border-radius:8px;padding:8px 13px;font-size:20px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;line-height:1;}
+.add-btn:active{transform:scale(.95);}
+
+/* ── NAV ── */
+nav{display:flex;background:var(--bg2);border-top:1px solid var(--border);flex-shrink:0;order:99;}
+.nav-btn{flex:1;padding:9px 4px 11px;border:none;background:none;color:var(--text2);font-size:10px;font-family:'DM Sans',sans-serif;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;transition:color .2s;}
+.nav-btn .ico{font-size:20px;}
+.nav-btn.active{color:var(--gold);}
+
+/* ── MAIN ── */
+main{flex:1;overflow-y:auto;overflow-x:hidden;padding:16px;}
+.page{display:none;flex-direction:column;gap:14px;animation:fadeIn .2s ease;}
+.page.active{display:flex;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── STATS ── */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;display:flex;flex-direction:column;gap:4px;position:relative;overflow:hidden;}
+.stat-card::before{content:'';position:absolute;top:-20px;right:-20px;width:70px;height:70px;border-radius:50%;background:var(--gold);opacity:.05;}
+.stat-num{font-family:'Playfair Display',serif;font-size:30px;color:var(--gold);font-weight:700;}
+.stat-label{font-size:11px;color:var(--text2);letter-spacing:.04em;text-transform:uppercase;}
+.stat-icon{font-size:22px;position:absolute;right:14px;top:14px;opacity:.4;}
+
+/* ── SECTION TITLE ── */
+.sec-title{font-family:'Playfair Display',serif;font-size:17px;color:var(--gold);display:flex;align-items:center;gap:8px;}
+
+/* ── SEARCH ── */
+.search-wrap{position:relative;}
+.search-wrap input{width:100%;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:12px 14px 12px 40px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;}
+.search-wrap input::placeholder{color:var(--text2);}
+.search-wrap input:focus{border-color:var(--gold);}
+.search-ico{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--text2);font-size:16px;}
+.filter-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none;}
+.filter-row::-webkit-scrollbar{display:none;}
+.chip{white-space:nowrap;padding:6px 13px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:12px;font-family:'DM Sans',sans-serif;cursor:pointer;transition:all .2s;}
+.chip.active{background:var(--gold);color:#000;border-color:var(--gold);}
+
+/* ── MEMBER CARDS ── */
+.member-list{display:flex;flex-direction:column;gap:8px;}
+.mcard{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:13px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:border-color .15s;}
+.mcard:active{border-color:var(--gold);}
+.avatar{width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;flex-shrink:0;font-family:'Playfair Display',serif;}
+.minfo{flex:1;min-width:0;}
+.mname{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.mmeta{font-size:11px;color:var(--text2);margin-top:2px;}
+.badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:600;margin-top:3px;}
+.badge-actif{background:rgba(76,175,125,.15);color:var(--green);}
+.badge-inactif{background:rgba(224,85,85,.12);color:var(--red);}
+.badge-honneur{background:rgba(200,146,42,.15);color:var(--gold);}
+.mchev{color:var(--text2);font-size:18px;}
+
+/* ── PROFIL CARD ── */
+.profile-card{background:var(--card);border:2px solid var(--gold);border-radius:var(--radius);padding:22px;display:flex;flex-direction:column;align-items:center;gap:10px;}
+.profile-av{width:76px;height:76px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;font-family:'Playfair Display',serif;border:2px solid var(--gold);}
+.profile-name{font-family:'Playfair Display',serif;font-size:20px;color:var(--gold);}
+.prows{width:100%;display:flex;flex-direction:column;gap:0;margin-top:6px;}
+.prow{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);}
+.prow:last-child{border-bottom:none;}
+.plabel{font-size:12px;color:var(--text2);}
+.pvalue{font-size:13px;font-weight:500;text-align:right;max-width:60%;}
+
+/* ── DETAIL PANEL ── */
+#detail-panel{position:fixed;inset:0;background:var(--bg);z-index:100;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .28s ease;}
+#detail-panel.open{transform:translateX(0);}
+.dhdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:14px 16px;display:flex;align-items:center;gap:12px;}
+.back-btn{background:none;border:none;color:var(--gold);font-size:24px;cursor:pointer;padding:2px 6px;}
+.dtitle{font-family:'Playfair Display',serif;font-size:18px;color:var(--gold);}
+.dbody{flex:1;overflow-y:auto;padding:20px 16px;display:flex;flex-direction:column;gap:16px;}
+.dav{width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:34px;font-weight:700;margin:0 auto;font-family:'Playfair Display',serif;border:2px solid var(--gold);}
+.dname{font-family:'Playfair Display',serif;font-size:22px;text-align:center;color:var(--gold);}
+.dsec{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;display:flex;flex-direction:column;gap:10px;}
+.dsec-title{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--text2);}
+.drow{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.dlabel{font-size:12px;color:var(--text2);}
+.dvalue{font-size:13px;font-weight:500;text-align:right;max-width:65%;}
+.dactions{display:flex;gap:8px;}
+.abtn{flex:1;padding:12px;border-radius:10px;border:none;font-size:13px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;}
+.abtn:active{opacity:.8;}
+.btn-edit{background:var(--gold);color:#000;}
+.btn-del{background:rgba(224,85,85,.15);color:var(--red);border:1px solid rgba(224,85,85,.25);}
+
+/* ── FORM MODAL ── */
+#form-modal{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;display:flex;align-items:flex-end;opacity:0;pointer-events:none;transition:opacity .25s;}
+#form-modal.open{opacity:1;pointer-events:all;}
+.fsheet{background:var(--bg2);border-radius:20px 20px 0 0;width:100%;padding:22px 16px 34px;max-height:93vh;overflow-y:auto;transform:translateY(100%);transition:transform .28s ease;}
+#form-modal.open .fsheet{transform:translateY(0);}
+.ftitle{font-family:'Playfair Display',serif;font-size:20px;color:var(--gold);margin-bottom:16px;}
+.fgrp{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
+.flabel{font-size:11px;color:var(--text2);letter-spacing:.04em;text-transform:uppercase;}
+.finput,.fselect{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:12px 13px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;outline:none;width:100%;}
+.finput:focus,.fselect:focus{border-color:var(--gold);}
+.fselect option{background:var(--bg2);}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.factions{display:flex;gap:8px;margin-top:6px;}
+.fcancelbtn{flex:1;padding:13px;border-radius:10px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:14px;font-weight:600;font-family:'DM Sans',sans-serif;cursor:pointer;}
+.fsavebtn{flex:2;padding:13px;border-radius:10px;border:none;background:var(--gold);color:#000;font-size:14px;font-weight:700;font-family:'DM Sans',sans-serif;cursor:pointer;}
+
+/* ── COTISATIONS ── */
+.cotis-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:13px;display:flex;align-items:center;gap:12px;}
+.cotis-ico{width:42px;height:42px;background:var(--bg3);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.cotis-info{flex:1;}
+.cotis-name{font-size:13px;font-weight:600;}
+.cotis-sub{font-size:11px;color:var(--text2);margin-top:2px;}
+.cotis-amount{font-family:'Playfair Display',serif;font-size:18px;color:var(--gold);}
+
+/* ── SETTINGS ── */
+.scard{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.srow{padding:14px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--border);cursor:pointer;}
+.srow:last-child{border-bottom:none;}
+.srow:active{background:var(--bg3);}
+.sico{font-size:20px;width:34px;text-align:center;}
+.slabel{font-size:14px;flex:1;}
+
+/* ── PWD MODAL ── */
+#pwd-modal{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .25s;}
+#pwd-modal.open{opacity:1;pointer-events:all;}
+.pbox{background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:24px 20px;width:100%;display:flex;flex-direction:column;gap:14px;}
+.pbox-title{font-family:'Playfair Display',serif;font-size:18px;color:var(--gold);}
+
+/* ── TOAST ── */
+#toast{position:fixed;bottom:82px;left:50%;transform:translateX(-50%) translateY(16px);background:var(--gold);color:#000;padding:10px 22px;border-radius:30px;font-size:13px;font-weight:600;opacity:0;transition:all .3s;z-index:600;white-space:nowrap;pointer-events:none;}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+.empty{text-align:center;padding:44px 20px;color:var(--text2);}
+.empty-ico{font-size:48px;margin-bottom:12px;}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+</style>
+</head>
+<body>
+
+<!-- ════ SPLASH ════ -->
+<div id="splash">
+  <div class="splash-globe">🌍</div>
+  <div class="splash-title">Afrikanischer Kulturverein<br>Hamm e.V. Westfalen</div>
+  <div class="splash-sub">Gestion des Membres</div>
+  <div class="splash-bar"><div class="splash-progress"></div></div>
+</div>
+
+<!-- ════ LOGIN ════ -->
+<div id="login-screen">
+  <div class="login-logo">🌍</div>
+  <div class="login-assoc">Afrikanischer Kulturverein<br>Hamm e.V. Westfalen</div>
+  <div class="login-city">HAMM · WESTFALEN · DEUTSCHLAND</div>
+  <div class="login-card">
+    <div class="login-tabs">
+      <button class="login-tab active" id="tab-admin" onclick="switchTab('admin')">👑 Admin</button>
+      <button class="login-tab" id="tab-membre" onclick="switchTab('membre')">👤 Membre</button>
+    </div>
+    <!-- Admin fields -->
+    <div id="admin-fields">
+      <div class="lfield">
+        <div class="llabel">Mot de passe Admin</div>
+        <input class="linput" id="admin-pwd" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+      </div>
+      <div class="lhint">Mot de passe par défaut : <strong>akv2024</strong><br>Modifiable dans ⚙️ Paramètres</div>
+    </div>
+    <!-- Membre fields -->
+    <div id="membre-fields" style="display:none;">
+      <div class="fgrid" style="margin-bottom:0;">
+        <div class="lfield">
+          <div class="llabel">Prénom</div>
+          <input class="linput" id="m-prenom" placeholder="Prénom…"/>
+        </div>
+        <div class="lfield">
+          <div class="llabel">Nom</div>
+          <input class="linput" id="m-nom" placeholder="Nom…" onkeydown="if(event.key==='Enter')doLogin()"/>
+        </div>
+      </div>
+      <div class="lhint" style="margin-top:8px;">Entrez votre prénom et nom tels qu'enregistrés par l'admin.</div>
+    </div>
+    <div class="lerror" id="lerror">❌ Identifiants incorrects</div>
+    <button class="lbtn" onclick="doLogin()">🔓 Se connecter</button>
+  </div>
+</div>
+
+<!-- ════ INSTALL BANNER ════ -->
+<div id="install-banner" class="hidden">
+  <span style="font-size:22px;">📲</span>
+  <div class="ibtext">Installer l'app sur votre écran d'accueil !</div>
+  <button class="ibbtn" id="install-btn">Installer</button>
+</div>
+
+<!-- ════ HEADER ════ -->
+<header id="app-header" style="display:none;">
+  <div class="logo-area">
+    <span class="logo-ico">🌍</span>
+    <div>
+      <div class="logo-text">AKV Hamm e.V.</div>
+      <div class="logo-sub">Westfalen · Gestion Membres</div>
+    </div>
+  </div>
+  <div class="hdr-right">
+    <div id="role-pill" class="role-pill admin" onclick="logout()">👑 Admin ↩</div>
+    <button class="add-btn" id="add-btn" onclick="openAddForm()" style="display:none;">＋</button>
+  </div>
+</header>
+
+<!-- ════ MAIN ════ -->
+<main id="app-main" style="display:none;">
+
+  <!-- ACCUEIL -->
+  <div class="page active" id="page-home">
+    <div class="stats-grid" id="stats-grid"></div>
+    <div class="sec-title">📋 Membres récents</div>
+    <div class="member-list" id="recent-list"></div>
+  </div>
+
+  <!-- MEMBRES -->
+  <div class="page" id="page-membres">
+    <div class="search-wrap">
+      <span class="search-ico">🔍</span>
+      <input type="text" id="search-input" placeholder="Rechercher un membre…"/>
+    </div>
+    <div class="filter-row">
+      <button class="chip active" data-filter="tous">Tous</button>
+      <button class="chip" data-filter="Actif">Actifs</button>
+      <button class="chip" data-filter="Inactif">Inactifs</button>
+      <button class="chip" data-filter="Membre d'honneur">Honneur</button>
+    </div>
+    <div class="member-list" id="members-list"></div>
+  </div>
+
+  <!-- MON PROFIL -->
+  <div class="page" id="page-profil">
+    <div class="sec-title">👤 Mon Profil</div>
+    <div id="profil-content"></div>
+  </div>
+
+  <!-- COTISATIONS -->
+  <div class="page" id="page-cotisations">
+    <div class="sec-title">💰 Cotisations <span id="cotis-year" style="font-size:13px;color:var(--text2);font-family:'DM Sans';margin-left:4px;"></span></div>
+    <div id="cotis-summary" class="stats-grid"></div>
+    <div id="cotis-list" class="member-list" style="margin-top:4px;"></div>
+  </div>
+
+  <!-- PARAMÈTRES -->
+  <div class="page" id="page-settings">
+    <div class="sec-title">⚙️ Paramètres</div>
+    <div class="scard" id="admin-settings-block">
+      <div class="srow" id="export-btn"><span class="sico">📤</span><span class="slabel">Exporter membres (CSV)</span><span style="color:var(--text2)">›</span></div>
+      <div class="srow" id="import-wrap"><span class="sico">📥</span><span class="slabel">Importer depuis CSV</span><span style="color:var(--text2)">›</span><input type="file" id="import-input" accept=".csv" style="display:none"/></div>
+      <div class="srow" id="chg-admin-btn"><span class="sico">🔑</span><span class="slabel">Changer mot de passe Admin</span><span style="color:var(--text2)">›</span></div>
+      <div class="srow" id="reset-btn"><span class="sico">🗑️</span><span class="slabel">Réinitialiser toutes les données</span><span style="color:var(--red)">›</span></div>
+    </div>
+    <div class="scard" style="margin-top:8px;">
+      <div class="srow" id="install-srow"><span class="sico">📲</span><span class="slabel">Ajouter à l'écran d'accueil</span><span style="color:var(--text2)">›</span></div>
+      <div class="srow" onclick="logout()"><span class="sico">↩️</span><span class="slabel" style="color:var(--red)">Se déconnecter</span></div>
+    </div>
+    <div class="scard" style="margin-top:8px;">
+      <div class="srow" style="cursor:default;">
+        <span class="sico">ℹ️</span>
+        <div style="flex:1;"><div class="slabel">AKV Hamm e.V. Westfalen</div><div style="font-size:11px;color:var(--text2);margin-top:2px;">Version 2.0 · Gestion des Membres</div></div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ════ NAV ════ -->
+<nav id="app-nav" style="display:none;">
+  <button class="nav-btn active" data-page="home"><span class="ico">🏠</span>Accueil</button>
+  <button class="nav-btn" data-page="membres" id="nav-membres"><span class="ico">👥</span>Membres</button>
+  <button class="nav-btn" data-page="profil" id="nav-profil" style="display:none;"><span class="ico">👤</span>Mon Profil</button>
+  <button class="nav-btn" data-page="cotisations"><span class="ico">💰</span>Cotisations</button>
+  <button class="nav-btn" data-page="settings"><span class="ico">⚙️</span>Paramètres</button>
+</nav>
+
+<!-- ════ DETAIL PANEL ════ -->
+<div id="detail-panel">
+  <div class="dhdr">
+    <button class="back-btn" onclick="closeDetail()">‹</button>
+    <div class="dtitle">Fiche Membre</div>
+  </div>
+  <div class="dbody" id="detail-body"></div>
+</div>
+
+<!-- ════ FORM MODAL ════ -->
+<div id="form-modal">
+  <div class="fsheet">
+    <div class="ftitle" id="form-title">Nouveau Membre</div>
+    <div class="fgrid">
+      <div class="fgrp"><label class="flabel">Prénom *</label><input class="finput" id="f-prenom" placeholder="Prénom"/></div>
+      <div class="fgrp"><label class="flabel">Nom *</label><input class="finput" id="f-nom" placeholder="Nom"/></div>
+    </div>
+    <div class="fgrp"><label class="flabel">Email</label><input class="finput" id="f-email" type="email" placeholder="email@exemple.com"/></div>
+    <div class="fgrp"><label class="flabel">Téléphone</label><input class="finput" id="f-tel" type="tel" placeholder="+49 …"/></div>
+    <div class="fgrp"><label class="flabel">Adresse</label><input class="finput" id="f-adresse" placeholder="Rue, ville…"/></div>
+    <div class="fgrid">
+      <div class="fgrp"><label class="flabel">Date d'adhésion</label><input class="finput" id="f-date" type="date"/></div>
+      <div class="fgrp"><label class="flabel">Cotisation (€)</label><input class="finput" id="f-cotisation" type="number" placeholder="60"/></div>
+    </div>
+    <div class="fgrid">
+      <div class="fgrp"><label class="flabel">Statut</label>
+        <select class="fselect" id="f-statut"><option>Actif</option><option>Inactif</option><option>Membre d'honneur</option></select>
+      </div>
+      <div class="fgrp"><label class="flabel">Nationalité</label><input class="finput" id="f-nationalite" placeholder="Ex: Camerounais"/></div>
+    </div>
+    <div class="fgrp"><label class="flabel">Notes</label><input class="finput" id="f-notes" placeholder="Informations complémentaires…"/></div>
+    <div class="factions">
+      <button class="fcancelbtn" onclick="closeForm()">Annuler</button>
+      <button class="fsavebtn" onclick="saveMembre()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ PWD MODAL ════ -->
+<div id="pwd-modal">
+  <div class="pbox">
+    <div class="pbox-title" id="pwd-title">🔑 Changer le mot de passe</div>
+    <div class="lfield"><div class="llabel">Nouveau mot de passe</div><input class="linput" id="new-pwd" type="password" placeholder="Nouveau…"/></div>
+    <div class="lfield"><div class="llabel">Confirmer</div><input class="linput" id="confirm-pwd" type="password" placeholder="Confirmer…"/></div>
+    <div class="lerror" id="pwd-error">Les mots de passe ne correspondent pas</div>
+    <div class="factions">
+      <button class="fcancelbtn" onclick="closePwdModal()">Annuler</button>
+      <button class="fsavebtn" onclick="savePwd()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ════ CONSTANTS ════
+const SK='akv_membres_v2';
+const APWD_KEY='akv_admin_pwd';
+const COLORS=['#c8922a','#4caf7d','#5b9bd5','#e05555','#9b59b6','#e67e22','#1abc9c','#e91e8c'];
+
+// ════ HELPERS ════
+const $=id=>document.getElementById(id);
+function load(){try{return JSON.parse(localStorage.getItem(SK)||'[]');}catch(e){return[];}}
+function save(m){localStorage.setItem(SK,JSON.stringify(m));}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,5);}
+function ini(p,n){return((p||'?')[0]+(n||'?')[0]).toUpperCase();}
+function col(id){let h=0;for(let c of id)h=(h*31+c.charCodeAt(0))%COLORS.length;return COLORS[h];}
+function getAPwd(){return localStorage.getItem(APWD_KEY)||'akv2024';}
+function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400);}
+
+// ════ SEED DATA ════
+function seed(){
+  if(load().length>0)return;
+  save([
+    {id:uid(),prenom:'Kofi',nom:'Asante',email:'kofi.asante@mail.de',tel:'+49 2381 1234',adresse:'Bahnhofstr. 12, Hamm',date:'2021-03-15',cotisation:60,statut:'Actif',nationalite:'Ghanéen',notes:'Trésorier',cotisePaye:true},
+    {id:uid(),prenom:'Amina',nom:'Diallo',email:'amina.diallo@mail.de',tel:'+49 2381 5678',adresse:'Marktplatz 3, Hamm',date:'2020-06-01',cotisation:60,statut:'Actif',nationalite:'Sénégalaise',notes:'Secrétaire',cotisePaye:true},
+    {id:uid(),prenom:'Chukwuemeka',nom:'Obi',email:'c.obi@mail.de',tel:'+49 2381 9012',adresse:'Weststr. 44, Hamm',date:'2019-01-20',cotisation:60,statut:"Membre d'honneur",nationalite:'Nigérian',notes:'Président fondateur',cotisePaye:true},
+    {id:uid(),prenom:'Fatou',nom:'Traoré',email:'fatou.t@mail.de',tel:'+49 2381 3456',adresse:'Nordring 7, Hamm',date:'2022-09-10',cotisation:60,statut:'Actif',nationalite:'Malienne',notes:'',cotisePaye:false},
+    {id:uid(),prenom:'Yaw',nom:'Mensah',email:'y.mensah@mail.de',tel:'+49 2381 7890',adresse:'Südstr. 22, Hamm',date:'2023-02-14',cotisation:60,statut:'Inactif',nationalite:'Ghanéen',notes:'En déplacement',cotisePaye:false},
+  ]);
+}
+seed();
+
+// ════ STATE ════
+let role=null,membreActif=null,editId=null,filter='tous',search='';
+
+// ════ LOGIN ════
+function switchTab(t){
+  $('tab-admin').classList.toggle('active',t==='admin');
+  $('tab-membre').classList.toggle('active',t==='membre');
+  $('admin-fields').style.display=t==='admin'?'block':'none';
+  $('membre-fields').style.display=t==='membre'?'block':'none';
+  $('lerror').style.display='none';
+}
+
+function doLogin(){
+  const isAdmin=$('tab-admin').classList.contains('active');
+  $('lerror').style.display='none';
+  if(isAdmin){
+    if($('admin-pwd').value===getAPwd()){role='admin';membreActif=null;enterApp();}
+    else{$('lerror').textContent='❌ Mot de passe incorrect';$('lerror').style.display='block';}
+  } else {
+    const p=$('m-prenom').value.trim().toLowerCase();
+    const n=$('m-nom').value.trim().toLowerCase();
+    const found=load().find(m=>m.prenom.toLowerCase()===p&&m.nom.toLowerCase()===n);
+    if(found){role='membre';membreActif=found;enterApp();}
+    else{$('lerror').textContent='❌ Membre non trouvé. Contactez l\'admin.';$('lerror').style.display='block';}
+  }
+}
+
+function enterApp(){
+  $('login-screen').classList.add('hidden');
+  $('app-header').style.display='flex';
+  $('app-main').style.display='block';
+  $('app-nav').style.display='flex';
+  setupRole();renderAll();
+}
+
+function logout(){
+  role=null;membreActif=null;
+  $('login-screen').classList.remove('hidden');
+  $('app-header').style.display='none';
+  $('app-main').style.display='none';
+  $('app-nav').style.display='none';
+  $('admin-pwd').value='';$('m-prenom').value='';$('m-nom').value='';
+  switchTab('admin');showPage('home');
+}
+
+function setupRole(){
+  const adm=role==='admin';
+  const pill=$('role-pill');
+  if(adm){pill.className='role-pill admin';pill.textContent='👑 Admin ↩';}
+  else{pill.className='role-pill membre';pill.textContent='👤 '+membreActif.prenom+' ↩';}
+  $('add-btn').style.display=adm?'flex':'none';
+  $('nav-profil').style.display=adm?'none':'flex';
+  $('nav-membres').style.display='flex';
+  $('admin-settings-block').style.display=adm?'block':'none';
+}
+
+// ════ NAVIGATION ════
+function showPage(p){
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active'));
+  $('page-'+p).classList.add('active');
+  document.querySelector(`.nav-btn[data-page="${p}"]`)?.classList.add('active');
+  if(p==='home'){renderStats();renderRecent();}
+  if(p==='membres')renderMembers();
+  if(p==='cotisations')renderCotisations();
+  if(p==='profil')renderProfil();
+}
+document.querySelectorAll('.nav-btn').forEach(b=>{b.onclick=function(){showPage(this.dataset.page);};});
+
+// ════ STATS ════
+function renderStats(){
+  const m=load();
+  const actifs=m.filter(x=>x.statut==='Actif').length;
+  const payes=m.filter(x=>x.cotisePaye).length;
+  const fonds=m.reduce((s,x)=>s+(x.cotisePaye?Number(x.cotisation)||0:0),0);
+  let h=`
+    <div class="stat-card"><div class="stat-num">${m.length}</div><div class="stat-label">Total Membres</div><span class="stat-icon">👥</span></div>
+    <div class="stat-card"><div class="stat-num">${actifs}</div><div class="stat-label">Membres Actifs</div><span class="stat-icon">✅</span></div>`;
+  if(role==='admin') h+=`
+    <div class="stat-card"><div class="stat-num">${payes}</div><div class="stat-label">Cotisations Payées</div><span class="stat-icon">💳</span></div>
+    <div class="stat-card"><div class="stat-num">${fonds}€</div><div class="stat-label">Fonds Récoltés</div><span class="stat-icon">💰</span></div>`;
+  $('stats-grid').innerHTML=h;
+}
+
+// ════ CARD HTML ════
+function cardHTML(m){
+  const bg=m.statut==='Actif'?'badge-actif':m.statut==='Inactif'?'badge-inactif':'badge-honneur';
+  const c=col(m.id);
+  return `<div class="mcard" data-id="${m.id}">
+    <div class="avatar" style="background:${c}22;color:${c};">${ini(m.prenom,m.nom)}</div>
+    <div class="minfo">
+      <div class="mname">${m.prenom} ${m.nom}</div>
+      <div class="mmeta">${m.nationalite||'—'} · Depuis ${m.date?new Date(m.date).getFullYear():'—'}</div>
+      <span class="badge ${bg}">${m.statut}</span>
+    </div>
+    <span class="mchev">›</span>
+  </div>`;
+}
+function attachCards(lid){document.querySelectorAll(`#${lid} .mcard`).forEach(c=>{c.onclick=()=>openDetail(c.dataset.id);});}
+
+function renderRecent(){
+  const m=load().slice(-5).reverse();
+  $('recent-list').innerHTML=m.length?m.map(cardHTML).join(''):`<div class="empty"><div class="empty-ico">👥</div>Aucun membre encore</div>`;
+  attachCards('recent-list');
+}
+function renderMembers(){
+  let m=load();
+  if(filter!=='tous')m=m.filter(x=>x.statut===filter);
+  if(search)m=m.filter(x=>(x.prenom+' '+x.nom+' '+(x.nationalite||'')).toLowerCase().includes(search.toLowerCase()));
+  $('members-list').innerHTML=m.length?m.map(cardHTML).join(''):`<div class="empty"><div class="empty-ico">🔍</div>Aucun résultat</div>`;
+  attachCards('members-list');
+}
+
+$('search-input').addEventListener('input',e=>{search=e.target.value;renderMembers();});
+document.querySelectorAll('.chip').forEach(b=>{b.onclick=function(){document.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));this.classList.add('active');filter=this.dataset.filter;renderMembers();};});
+
+// ════ MON PROFIL ════
+function renderProfil(){
+  if(!membreActif)return;
+  const mb=load().find(x=>x.id===membreActif.id)||membreActif;
+  const c=col(mb.id);
+  $('profil-content').innerHTML=`
+    <div class="profile-card">
+      <div class="profile-av" style="background:${c}22;color:${c};">${ini(mb.prenom,mb.nom)}</div>
+      <div class="profile-name">${mb.prenom} ${mb.nom}</div>
+      <span class="badge ${mb.statut==='Actif'?'badge-actif':mb.statut==='Inactif'?'badge-inactif':'badge-honneur'}">${mb.statut}</span>
+      <div class="prows">
+        <div class="prow"><span class="plabel">Email</span><span class="pvalue">${mb.email||'—'}</span></div>
+        <div class="prow"><span class="plabel">Téléphone</span><span class="pvalue">${mb.tel||'—'}</span></div>
+        <div class="prow"><span class="plabel">Adresse</span><span class="pvalue">${mb.adresse||'—'}</span></div>
+        <div class="prow"><span class="plabel">Nationalité</span><span class="pvalue">${mb.nationalite||'—'}</span></div>
+        <div class="prow"><span class="plabel">Membre depuis</span><span class="pvalue">${mb.date?new Date(mb.date).toLocaleDateString('fr-FR'):'—'}</span></div>
+        <div class="prow"><span class="plabel">Cotisation</span><span class="pvalue" style="color:var(--gold);">${mb.cotisation||0} €</span></div>
+        <div class="prow"><span class="plabel">Paiement</span><span class="pvalue" style="color:${mb.cotisePaye?'var(--green)':'var(--red)'};">${mb.cotisePaye?'✅ Payé':'⏳ En attente'}</span></div>
+      </div>
+    </div>`;
+}
+
+// ════ DETAIL ════
+function openDetail(id){
+  const mb=load().find(x=>x.id===id);if(!mb)return;
+  const c=col(mb.id);const adm=role==='admin';
+  $('detail-body').innerHTML=`
+    <div class="dav" style="background:${c}22;color:${c};">${ini(mb.prenom,mb.nom)}</div>
+    <div class="dname">${mb.prenom} ${mb.nom}</div>
+    <div style="text-align:center;margin-top:-6px;"><span class="badge ${mb.statut==='Actif'?'badge-actif':mb.statut==='Inactif'?'badge-inactif':'badge-honneur'}">${mb.statut}</span></div>
+    <div class="dsec">
+      <div class="dsec-title">📋 Informations</div>
+      <div class="drow"><span class="dlabel">Email</span><span class="dvalue">${mb.email||'—'}</span></div>
+      <div class="drow"><span class="dlabel">Téléphone</span><span class="dvalue">${mb.tel||'—'}</span></div>
+      <div class="drow"><span class="dlabel">Nationalité</span><span class="dvalue">${mb.nationalite||'—'}</span></div>
+      ${adm?`<div class="drow"><span class="dlabel">Adresse</span><span class="dvalue">${mb.adresse||'—'}</span></div>`:''}
+    </div>
+    <div class="dsec">
+      <div class="dsec-title">💰 Adhésion</div>
+      <div class="drow"><span class="dlabel">Membre depuis</span><span class="dvalue">${mb.date?new Date(mb.date).toLocaleDateString('fr-FR'):'—'}</span></div>
+      ${adm?`<div class="drow"><span class="dlabel">Cotisation</span><span class="dvalue" style="color:var(--gold);">${mb.cotisation||0} €</span></div>
+      <div class="drow"><span class="dlabel">Paiement</span><span class="dvalue" style="color:${mb.cotisePaye?'var(--green)':'var(--red)'};">${mb.cotisePaye?'✅ Payé':'⏳ En attente'}</span></div>`:''}
+    </div>
+    ${mb.notes&&adm?`<div class="dsec"><div class="dsec-title">📝 Notes</div><div style="font-size:13px;color:var(--text2);line-height:1.5;">${mb.notes}</div></div>`:''}
+    ${adm?`<div class="dactions">
+      <button class="abtn btn-edit" onclick="openEdit('${mb.id}')">✏️ Modifier</button>
+      <button class="abtn btn-del" onclick="delMembre('${mb.id}')">🗑️ Supprimer</button>
+    </div>`:''}`;
+  $('detail-panel').classList.add('open');
+}
+function closeDetail(){$('detail-panel').classList.remove('open');}
+
+window.openEdit=function(id){
+  closeDetail();editId=id;
+  const mb=load().find(x=>x.id===id);if(!mb)return;
+  $('form-title').textContent='Modifier Membre';
+  ['prenom','nom','email','tel','adresse','nationalite','notes'].forEach(f=>$('f-'+f).value=mb[f]||'');
+  $('f-date').value=mb.date||'';$('f-cotisation').value=mb.cotisation||'';$('f-statut').value=mb.statut||'Actif';
+  $('form-modal').classList.add('open');
+};
+window.delMembre=function(id){
+  if(!confirm('Supprimer ce membre définitivement ?'))return;
+  save(load().filter(x=>x.id!==id));closeDetail();renderAll();toast('🗑️ Membre supprimé');
+};
+
+// ════ FORM ════
+function openAddForm(){
+  if(role!=='admin')return;editId=null;
+  $('form-title').textContent='Nouveau Membre';
+  ['prenom','nom','email','tel','adresse','cotisation','nationalite','notes'].forEach(f=>$('f-'+f).value='');
+  $('f-date').value=new Date().toISOString().slice(0,10);$('f-statut').value='Actif';
+  $('form-modal').classList.add('open');
+}
+function closeForm(){$('form-modal').classList.remove('open');}
+$('form-modal').addEventListener('click',e=>{if(e.target===$('form-modal'))closeForm();});
+
+function saveMembre(){
+  const prenom=$('f-prenom').value.trim(),nom=$('f-nom').value.trim();
+  if(!prenom||!nom){toast('⚠️ Prénom et Nom requis');return;}
+  const m=load();
+  const mb={prenom,nom,email:$('f-email').value.trim(),tel:$('f-tel').value.trim(),adresse:$('f-adresse').value.trim(),date:$('f-date').value,cotisation:$('f-cotisation').value||60,statut:$('f-statut').value,nationalite:$('f-nationalite').value.trim(),notes:$('f-notes').value.trim(),cotisePaye:false};
+  if(editId){const i=m.findIndex(x=>x.id===editId);if(i>=0){mb.id=editId;mb.cotisePaye=m[i].cotisePaye;m[i]=mb;}toast('✅ Membre modifié');}
+  else{mb.id=uid();m.push(mb);toast('✅ Membre ajouté');}
+  save(m);closeForm();renderAll();
+}
+
+// ════ COTISATIONS ════
+function renderCotisations(){
+  const m=load();const adm=role==='admin';
+  $('cotis-year').textContent=new Date().getFullYear();
+  const tp=m.filter(x=>x.cotisePaye).reduce((s,x)=>s+(Number(x.cotisation)||0),0);
+  const tt=m.reduce((s,x)=>s+(Number(x.cotisation)||0),0);
+  $('cotis-summary').innerHTML=adm?`
+    <div class="stat-card"><div class="stat-num">${tp}€</div><div class="stat-label">Perçus</div><span class="stat-icon">✅</span></div>
+    <div class="stat-card"><div class="stat-num">${tt-tp}€</div><div class="stat-label">En attente</div><span class="stat-icon">⏳</span></div>`:'';
+  $('cotis-list').innerHTML=m.map(mb=>{
+    const c=col(mb.id);
+    return `<div class="cotis-card">
+      <div class="cotis-ico" style="color:${c};">${mb.cotisePaye?'✅':'⏳'}</div>
+      <div class="cotis-info">
+        <div class="cotis-name">${mb.prenom} ${mb.nom}</div>
+        <div class="cotis-sub">${mb.cotisePaye?'Payé':'En attente'} · ${mb.statut}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+        ${adm?`<div class="cotis-amount">${mb.cotisation||0}€</div>
+        <button onclick="toggleCotis('${mb.id}')" style="font-size:10px;padding:4px 10px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;font-family:'DM Sans';">${mb.cotisePaye?'Annuler':'Valider'}</button>`:'<span style="font-size:20px;">'+(mb.cotisePaye?'✅':'⏳')+'</span>'}
+      </div>
+    </div>`;
+  }).join('');
+}
+window.toggleCotis=function(id){
+  if(role!=='admin')return;
+  const m=load();const i=m.findIndex(x=>x.id===id);if(i<0)return;
+  m[i].cotisePaye=!m[i].cotisePaye;save(m);
+  toast(m[i].cotisePaye?'✅ Cotisation validée':'↩️ Annulée');
+  renderCotisations();renderStats();
+};
+
+// ════ PASSWORD ════
+$('chg-admin-btn').onclick=function(){
+  $('pwd-title').textContent='🔑 Mot de passe Admin';
+  $('new-pwd').value='';$('confirm-pwd').value='';$('pwd-error').style.display='none';
+  $('pwd-modal').classList.add('open');
+};
+function closePwdModal(){$('pwd-modal').classList.remove('open');}
+function savePwd(){
+  const np=$('new-pwd').value,cp=$('confirm-pwd').value;
+  if(np.length<4){$('pwd-error').textContent='Minimum 4 caractères';$('pwd-error').style.display='block';return;}
+  if(np!==cp){$('pwd-error').textContent='Les mots de passe ne correspondent pas';$('pwd-error').style.display='block';return;}
+  localStorage.setItem(APWD_KEY,np);closePwdModal();toast('✅ Mot de passe mis à jour !');
+}
+
+// ════ EXPORT / IMPORT ════
+$('export-btn').onclick=function(){
+  const m=load();
+  const h=['Prénom','Nom','Email','Téléphone','Adresse','Date adhésion','Cotisation','Statut','Nationalité','Cotisation payée','Notes'];
+  const rows=m.map(x=>[x.prenom,x.nom,x.email,x.tel,x.adresse,x.date,x.cotisation,x.statut,x.nationalite,x.cotisePaye?'Oui':'Non',x.notes].map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(','));
+  const csv=[h.join(','),...rows].join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(csv);
+  a.download=`membres_akv_${new Date().toISOString().slice(0,10)}.csv`;a.click();toast('📤 Export téléchargé');
+};
+$('import-wrap').onclick=()=>$('import-input').click();
+$('import-input').onchange=function(e){
+  const file=e.target.files[0];if(!file)return;
+  const r=new FileReader();
+  r.onload=function(ev){
+    try{const lines=ev.target.result.split('\n').slice(1).filter(l=>l.trim());const m=load();let c=0;
+      lines.forEach(line=>{const cols=line.split(',').map(c=>c.trim().replace(/^"|"$/g,''));if(cols[0]&&cols[1]){m.push({id:uid(),prenom:cols[0],nom:cols[1],email:cols[2]||'',tel:cols[3]||'',adresse:cols[4]||'',date:cols[5]||'',cotisation:cols[6]||60,statut:cols[7]||'Actif',nationalite:cols[8]||'',cotisePaye:cols[9]==='Oui',notes:cols[10]||''});c++;}});
+      save(m);renderAll();toast(`📥 ${c} membres importés`);
+    }catch(err){toast('❌ Erreur import');}e.target.value='';
+  };r.readAsText(file);
+};
+$('reset-btn').onclick=function(){
+  if(confirm('⚠️ Supprimer TOUTES les données définitivement ?')){
+    localStorage.removeItem(SK);seed();renderAll();toast('🔄 Données réinitialisées');
+  }
+};
+
+// ════ PWA INSTALL ════
+let deferredPrompt=null;
+function triggerInstall(){
+  if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null;$('install-banner').classList.add('hidden');toast('📲 App installée !');}); }
+  else{toast('💡 Menu Chrome ⋮ → "Ajouter à l\'écran d\'accueil"');}
+}
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();deferredPrompt=e;$('install-banner').classList.remove('hidden');
+});
+$('install-btn').onclick=triggerInstall;
+$('install-srow').onclick=triggerInstall;
+window.addEventListener('appinstalled',()=>{$('install-banner').classList.add('hidden');toast('📲 Application installée !');});
+
+// ════ SERVICE WORKER ════
+if('serviceWorker' in navigator){
+  const sw=`self.addEventListener('fetch',e=>{e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)));});`;
+  const blob=new Blob([sw],{type:'application/javascript'});
+  navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>{});
+}
+
+// ════ RENDER ALL ════
+function renderAll(){renderStats();renderRecent();renderMembers();}
+
+// ════ INIT ════
+setTimeout(()=>{$('splash').classList.add('hidden');},1800);
+</script>
+</body>
+</html>
