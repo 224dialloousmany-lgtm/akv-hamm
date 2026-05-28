@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WORLDTV — Toutes les chaînes du monde</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #080a0f;
+    --surface: #0f1219;
+    --border: #1e2433;
+    --accent: #00e5ff;
+    --accent2: #ff3d71;
+    --text: #e0e6f0;
+    --muted: #4a5568;
+    --scan: rgba(0,229,255,0.03);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Scanline overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      var(--scan) 2px,
+      var(--scan) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* Noise texture */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9998;
+    opacity: 0.4;
+  }
+
+  /* HEADER */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.2rem 2rem;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    background: rgba(8,10,15,0.95);
+    backdrop-filter: blur(12px);
+    z-index: 100;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-shadow: 0 0 20px rgba(0,229,255,0.5);
+    position: relative;
+  }
+  .logo span { color: var(--accent2); }
+
+  .live-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--accent2);
+    letter-spacing: 0.1em;
+  }
+  .live-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent2);
+    animation: pulse 1.4s ease-in-out infinite;
+    box-shadow: 0 0 8px var(--accent2);
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  .channel-count {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+  .channel-count b { color: var(--accent); }
+
+  /* SEARCH + FILTERS */
+  .controls {
+    padding: 1.5rem 2rem;
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .search-wrap {
+    position: relative;
+    flex: 1;
+    min-width: 220px;
+  }
+  .search-wrap svg {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    width: 16px; height: 16px;
+  }
+  input[type="text"] {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.65rem 1rem 0.65rem 2.6rem;
+    color: var(--text);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input[type="text"]:focus { border-color: var(--accent); }
+  input[type="text"]::placeholder { color: var(--muted); }
+
+  .filter-group {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--muted);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    padding: 0.5rem 0.9rem;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .filter-btn.active {
+    background: rgba(0,229,255,0.1);
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: 0 0 12px rgba(0,229,255,0.15);
+  }
+
+  /* MAIN LAYOUT */
+  .main {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    min-height: calc(100vh - 140px);
+  }
+
+  /* SIDEBAR */
+  .sidebar {
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    max-height: calc(100vh - 140px);
+    position: sticky;
+    top: 60px;
+  }
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-track { background: transparent; }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .region-header {
+    padding: 1rem 1.5rem 0.5rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .country-item {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.7rem 1.5rem;
+    cursor: pointer;
+    border-bottom: 1px solid rgba(30,36,51,0.5);
+    transition: background 0.15s;
+  }
+  .country-item:hover { background: rgba(0,229,255,0.04); }
+  .country-item.active {
+    background: rgba(0,229,255,0.08);
+    border-left: 2px solid var(--accent);
+  }
+  .country-flag { font-size: 1.3rem; line-height: 1; }
+  .country-name {
+    font-size: 0.85rem;
+    color: var(--text);
+    flex: 1;
+  }
+  .country-count {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--muted);
+    background: var(--border);
+    padding: 2px 6px;
+    border-radius: 2px;
+  }
+
+  /* CHANNEL GRID */
+  .channel-area {
+    padding: 1.5rem 2rem;
+    overflow-y: auto;
+  }
+
+  .area-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.6rem;
+    letter-spacing: 0.08em;
+    color: var(--text);
+    margin-bottom: 0.3rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+  }
+  .area-sub {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+    letter-spacing: 0.05em;
+  }
+
+  .channels-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .channel-card {
+    background: var(--surface);
+    padding: 1.2rem;
+    cursor: pointer;
+    transition: background 0.15s;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .channel-card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, transparent 60%, rgba(0,229,255,0.04));
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .channel-card:hover { background: #131824; }
+  .channel-card:hover::after { opacity: 1; }
+  .channel-card.active {
+    background: rgba(0,229,255,0.06);
+    outline: 1px solid var(--accent);
+  }
+
+  .ch-logo {
+    width: 48px; height: 48px;
+    border-radius: 4px;
+    object-fit: contain;
+    background: #1a1f2e;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    overflow: hidden;
+  }
+  .ch-logo img { width: 100%; height: 100%; object-fit: contain; }
+
+  .ch-name {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text);
+    line-height: 1.2;
+  }
+  .ch-category {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.65rem;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+  .ch-lang {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    padding: 2px 6px;
+    background: var(--border);
+    border-radius: 2px;
+    color: var(--muted);
+    align-self: flex-start;
+  }
+
+  /* PLAYER MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    width: 100%;
+    max-width: 900px;
+    overflow: hidden;
+    transform: translateY(20px);
+    transition: transform 0.25s;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(0,229,255,0.1);
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal-title {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .modal-ch-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.4rem;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+  }
+  .modal-close {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    width: 32px; height: 32px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    line-height: 1;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-close:hover { border-color: var(--accent2); color: var(--accent2); }
+
+  .player-area {
+    background: #000;
+    aspect-ratio: 16/9;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 1rem;
+    overflow: hidden;
+  }
+
+  /* TV static animation */
+  .tv-static {
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.15'/%3E%3C/svg%3E");
+    animation: staticAnim 0.08s infinite;
+    opacity: 0.3;
+  }
+  @keyframes staticAnim {
+    0% { transform: translate(0, 0) scale(1.02); }
+    25% { transform: translate(-2px, 1px) scale(1); }
+    50% { transform: translate(2px, -1px) scale(1.01); }
+    75% { transform: translate(-1px, 2px) scale(1); }
+    100% { transform: translate(1px, -2px) scale(1.02); }
+  }
+
+  .player-icon { font-size: 3rem; z-index: 1; }
+  .player-msg {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.6);
+    text-align: center;
+    z-index: 1;
+    max-width: 400px;
+    line-height: 1.6;
+  }
+
+  .stream-link {
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  .stream-btn {
+    background: var(--accent);
+    color: #000;
+    border: none;
+    border-radius: 4px;
+    padding: 0.6rem 1.5rem;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    transition: opacity 0.15s;
+    text-decoration: none;
+    display: inline-block;
+  }
+  .stream-btn:hover { opacity: 0.85; }
+
+  .modal-info {
+    padding: 1rem 1.5rem;
+    display: flex;
+    gap: 2rem;
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .info-item { display: flex; flex-direction: column; gap: 2px; }
+  .info-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+  }
+  .info-value { font-size: 0.82rem; color: var(--text); }
+
+  /* Empty state */
+  .empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 4rem;
+    gap: 1rem;
+    color: var(--muted);
+    text-align: center;
+  }
+  .empty svg { opacity: 0.3; }
+  .empty p { font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; }
+
+  /* Ticker */
+  .ticker {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+    white-space: nowrap;
+    padding: 0.4rem 0;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    color: var(--muted);
+  }
+  .ticker-inner {
+    display: inline-block;
+    animation: ticker 40s linear infinite;
+  }
+  @keyframes ticker {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  @media (max-width: 768px) {
+    .main { grid-template-columns: 1fr; }
+    .sidebar { max-height: 200px; position: relative; top: 0; display: flex; flex-direction: row; overflow-x: auto; overflow-y: hidden; border-right: none; border-bottom: 1px solid var(--border); }
+    .region-header { display: none; }
+    .country-item { min-width: 100px; border-bottom: none; border-right: 1px solid rgba(30,36,51,0.5); }
+    .controls { padding: 1rem; }
+    .channel-area { padding: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">WORLD<span>TV</span></div>
+  <div class="live-indicator">
+    <div class="live-dot"></div>
+    <span>EN DIRECT</span>
+  </div>
+  <div class="channel-count">
+    <b id="count">0</b> chaînes disponibles
+  </div>
+</header>
+
+<div class="ticker">
+  <div class="ticker-inner" id="ticker-text"></div>
+</div>
+
+<div class="controls">
+  <div class="search-wrap">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" id="search" placeholder="Rechercher une chaîne..." />
+  </div>
+  <div class="filter-group" id="categories">
+    <button class="filter-btn active" data-cat="all">TOUTES</button>
+    <button class="filter-btn" data-cat="News">ACTUALITÉS</button>
+    <button class="filter-btn" data-cat="Sport">SPORT</button>
+    <button class="filter-btn" data-cat="Divertissement">DIVERTISSEMENT</button>
+    <button class="filter-btn" data-cat="Documentaire">DOCS</button>
+    <button class="filter-btn" data-cat="Musique">MUSIQUE</button>
+    <button class="filter-btn" data-cat="Cinéma">CINÉMA</button>
+  </div>
+</div>
+
+<div class="main">
+  <aside class="sidebar" id="sidebar"></aside>
+  <div class="channel-area" id="channel-area">
+    <div class="area-title" id="area-title">🌍 Monde entier</div>
+    <div class="area-sub" id="area-sub">Sélectionnez un pays ou parcourez toutes les chaînes</div>
+    <div class="channels-grid" id="channels-grid"></div>
+  </div>
+</div>
+
+<!-- MODAL PLAYER -->
+<div class="modal-overlay" id="modal-overlay">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">
+        <div class="ch-logo" id="modal-logo" style="width:36px;height:36px;font-size:1.2rem;"></div>
+        <div class="modal-ch-name" id="modal-name"></div>
+        <div class="live-indicator">
+          <div class="live-dot"></div><span style="font-size:0.65rem">LIVE</span>
+        </div>
+      </div>
+      <button class="modal-close" id="modal-close">✕</button>
+    </div>
+    <div class="player-area">
+      <div class="tv-static"></div>
+      <div class="player-icon" id="modal-flag"></div>
+      <div class="player-msg">
+        Streaming IPTV en direct.<br>
+        Cliquez ci-dessous pour ouvrir dans votre lecteur multimédia (VLC recommandé).
+      </div>
+      <div class="stream-link">
+        <a class="stream-btn" id="stream-url" href="#" target="_blank">▶ OUVRIR LE FLUX</a>
+      </div>
+    </div>
+    <div class="modal-info">
+      <div class="info-item">
+        <span class="info-label">PAYS</span>
+        <span class="info-value" id="info-country">—</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">CATÉGORIE</span>
+        <span class="info-value" id="info-cat">—</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">LANGUE</span>
+        <span class="info-value" id="info-lang">—</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">SOURCE</span>
+        <span class="info-value" id="info-src">IPTV Open</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// =====================
+// DATA — Channels catalog
+// =====================
+const REGIONS = [
+  { name: "Europe", countries: [
+    { code: "FR", flag: "🇫🇷", name: "France", count: 12 },
+    { code: "GB", flag: "🇬🇧", name: "Royaume-Uni", count: 15 },
+    { code: "DE", flag: "🇩🇪", name: "Allemagne", count: 10 },
+    { code: "ES", flag: "🇪🇸", name: "Espagne", count: 9 },
+    { code: "IT", flag: "🇮🇹", name: "Italie", count: 8 },
+    { code: "BE", flag: "🇧🇪", name: "Belgique", count: 6 },
+    { code: "CH", flag: "🇨🇭", name: "Suisse", count: 5 },
+    { code: "RU", flag: "🇷🇺", name: "Russie", count: 8 },
+    { code: "NL", flag: "🇳🇱", name: "Pays-Bas", count: 6 },
+    { code: "PT", flag: "🇵🇹", name: "Portugal", count: 5 },
+  ]},
+  { name: "Amériques", countries: [
+    { code: "US", flag: "🇺🇸", name: "États-Unis", count: 20 },
+    { code: "BR", flag: "🇧🇷", name: "Brésil", count: 10 },
+    { code: "MX", flag: "🇲🇽", name: "Mexique", count: 8 },
+    { code: "AR", flag: "🇦🇷", name: "Argentine", count: 6 },
+    { code: "CA", flag: "🇨🇦", name: "Canada", count: 7 },
+    { code: "CO", flag: "🇨🇴", name: "Colombie", count: 5 },
+  ]},
+  { name: "Afrique de l'Ouest", countries: [
+    { code: "SN", flag: "🇸🇳", name: "Sénégal", count: 6 },
+    { code: "CI", flag: "🇨🇮", name: "Côte d'Ivoire", count: 6 },
+    { code: "ML", flag: "🇲🇱", name: "Mali", count: 4 },
+    { code: "BF", flag: "🇧🇫", name: "Burkina Faso", count: 4 },
+    { code: "GN", flag: "🇬🇳", name: "Guinée", count: 4 },
+    { code: "GH", flag: "🇬🇭", name: "Ghana", count: 5 },
+    { code: "NG", flag: "🇳🇬", name: "Nigeria", count: 6 },
+    { code: "CM", flag: "🇨🇲", name: "Cameroun", count: 4 },
+    { code: "BJ", flag: "🇧🇯", name: "Bénin", count: 3 },
+    { code: "TG", flag: "🇹🇬", name: "Togo", count: 3 },
+    { code: "NE", flag: "🇳🇪", name: "Niger", count: 3 },
+  ]},
+  { name: "Moyen-Orient & Afrique du Nord", countries: [
+    { code: "AR_WORLD", flag: "🇦🇪", name: "Monde Arabe", count: 12 },
+    { code: "EG", flag: "🇪🇬", name: "Égypte", count: 8 },
+    { code: "MA", flag: "🇲🇦", name: "Maroc", count: 6 },
+    { code: "DZ", flag: "🇩🇿", name: "Algérie", count: 5 },
+    { code: "TN", flag: "🇹🇳", name: "Tunisie", count: 4 },
+    { code: "ZA", flag: "🇿🇦", name: "Afrique du Sud", count: 5 },
+  ]},
+  { name: "Asie & Pacifique", countries: [
+    { code: "CN", flag: "🇨🇳", name: "Chine", count: 10 },
+    { code: "JP", flag: "🇯🇵", name: "Japon", count: 8 },
+    { code: "IN", flag: "🇮🇳", name: "Inde", count: 12 },
+    { code: "KR", flag: "🇰🇷", name: "Corée du Sud", count: 7 },
+    { code: "TR", flag: "🇹🇷", name: "Turquie", count: 8 },
+    { code: "AU", flag: "🇦🇺", name: "Australie", count: 6 },
+  ]},
+];
+
+const CHANNELS = [
+  // FRANCE
+  { id: 1, name: "TF1", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/TF1_logo_2013.svg/120px-TF1_logo_2013.svg.png", country: "FR", countryName: "France", flag: "🇫🇷", lang: "FR", cat: "Divertissement", stream: "https://www.tf1.fr/tf1/direct" },
+  { id: 2, name: "France 24", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/France_24_logo.svg/120px-France_24_logo.svg.png", country: "FR", countryName: "France", flag: "🇫🇷", lang: "FR/EN", cat: "News", stream: "https://www.france24.com/fr/direct" },
+  { id: 3, name: "BFM TV", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/BFMTV_logo_2017.svg/120px-BFMTV_logo_2017.svg.png", country: "FR", countryName: "France", flag: "🇫🇷", lang: "FR", cat: "News", stream: "https://www.bfmtv.com/en-direct/" },
+  { id: 4, name: "Arte", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8e/Arte_logo.svg/120px-Arte_logo.svg.png", country: "FR", countryName: "France", flag: "🇫🇷", lang: "FR/DE", cat: "Documentaire", stream: "https://www.arte.tv/fr/direct/" },
+  { id: 5, name: "Canal+", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Canal%2B_France_2019.svg/120px-Canal%2B_France_2019.svg.png", country: "FR", countryName: "France", flag: "🇫🇷", lang: "FR", cat: "Cinéma", stream: "https://www.canalplus.com/direct/" },
+  { id: 6, name: "M6", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/M6_2009_logo.svg/100px-M6_2009_logo.svg.png", country: "FR", countryName: "France", flag: "🇫🇷", lang: "FR", cat: "Divertissement", stream: "https://www.6play.fr/m6-direct" },
+  { id: 7, name: "Euronews FR", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/Euronews_logo.svg/120px-Euronews_logo.svg.png", country: "FR", countryName: "France", flag: "🇫🇷", lang: "FR", cat: "News", stream: "https://fr.euronews.com/live" },
+  { id: 8, name: "RMC Sport", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/RMC_Sport_logo_2018.svg/120px-RMC_Sport_logo_2018.svg.png", country: "FR", countryName: "France", flag: "🇫🇷", lang: "FR", cat: "Sport", stream: "https://rmcsport.bfmtv.com/en-direct/" },
+  { id: 9, name: "France 5", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/80/France_5_logo_2020.svg/100px-France_5_logo_2020.svg.png", country: "FR", countryName: "France", flag: "🇫🇷", lang: "FR", cat: "Documentaire", stream: "https://www.france.tv/france-5/direct" },
+  { id: 10, name: "France Info", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cf/Franceinfo_logo_2016.svg/120px-Franceinfo_logo_2016.svg.png", country: "FR", countryName: "France", flag: "🇫🇷", lang: "FR", cat: "News", stream: "https://www.francetvinfo.fr/en-direct/tv.html" },
+  { id: 11, name: "W9", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/70/W9_logo.svg/100px-W9_logo.svg.png", country: "FR", countryName: "France", flag: "🇫🇷", lang: "FR", cat: "Musique", stream: "https://www.6play.fr/w9-direct" },
+  { id: 12, name: "NRJ 12", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/NRJ_12_logo_2015.svg/100px-NRJ_12_logo_2015.svg.png", country: "FR", countryName: "France", flag: "🇫🇷", lang: "FR", cat: "Musique", stream: "https://www.nrj12.fr/en-direct" },
+  // UK
+  { id: 13, name: "BBC News", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/BBC_News_2019.svg/120px-BBC_News_2019.svg.png", country: "GB", countryName: "Royaume-Uni", flag: "🇬🇧", lang: "EN", cat: "News", stream: "https://www.bbc.co.uk/iplayer/live/bbcnews" },
+  { id: 14, name: "Sky News", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Sky_News_logo_2016.svg/120px-Sky_News_logo_2016.svg.png", country: "GB", countryName: "Royaume-Uni", flag: "🇬🇧", lang: "EN", cat: "News", stream: "https://news.sky.com/watch-sky-news-live" },
+  { id: 15, name: "ITV", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4a/ITV_logo_2013.svg/100px-ITV_logo_2013.svg.png", country: "GB", countryName: "Royaume-Uni", flag: "🇬🇧", lang: "EN", cat: "Divertissement", stream: "https://www.itv.com/watch?filter=live" },
+  { id: 16, name: "BBC One", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/18/BBC_One_logo_2021.svg/100px-BBC_One_logo_2021.svg.png", country: "GB", countryName: "Royaume-Uni", flag: "🇬🇧", lang: "EN", cat: "Divertissement", stream: "https://www.bbc.co.uk/iplayer/live/bbcone" },
+  { id: 17, name: "Channel 4", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Channel_4_logo_2015.svg/100px-Channel_4_logo_2015.svg.png", country: "GB", countryName: "Royaume-Uni", flag: "🇬🇧", lang: "EN", cat: "Divertissement", stream: "https://www.channel4.com/now/C4" },
+  // USA
+  { id: 18, name: "CNN", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b1/CNN.svg/120px-CNN.svg.png", country: "US", countryName: "États-Unis", flag: "🇺🇸", lang: "EN", cat: "News", stream: "https://www.cnn.com/live-tv" },
+  { id: 19, name: "Fox News", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Fox_News_Channel_logo.svg/120px-Fox_News_Channel_logo.svg.png", country: "US", countryName: "États-Unis", flag: "🇺🇸", lang: "EN", cat: "News", stream: "https://www.foxnews.com/watch-tv-online/on-air" },
+  { id: 20, name: "ESPN", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2f/ESPN_wordmark.svg/120px-ESPN_wordmark.svg.png", country: "US", countryName: "États-Unis", flag: "🇺🇸", lang: "EN", cat: "Sport", stream: "https://www.espn.com/watch/" },
+  { id: 21, name: "NBC News", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3f/NBC_logo.svg/100px-NBC_logo.svg.png", country: "US", countryName: "États-Unis", flag: "🇺🇸", lang: "EN", cat: "News", stream: "https://www.nbcnews.com/now" },
+  { id: 22, name: "ABC News", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a5/Abc-news-1.svg/100px-Abc-news-1.svg.png", country: "US", countryName: "États-Unis", flag: "🇺🇸", lang: "EN", cat: "News", stream: "https://abcnews.go.com/live" },
+  { id: 23, name: "MSNBC", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e4/MSNBC_logo_New.svg/120px-MSNBC_logo_New.svg.png", country: "US", countryName: "États-Unis", flag: "🇺🇸", lang: "EN", cat: "News", stream: "https://www.msnbc.com/watch-live" },
+  { id: 24, name: "Bloomberg TV", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/10/Bloomberg_Television_2022.png/120px-Bloomberg_Television_2022.png", country: "US", countryName: "États-Unis", flag: "🇺🇸", lang: "EN", cat: "News", stream: "https://www.bloomberg.com/live" },
+  { id: 25, name: "NASA TV", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/NASA_logo.svg/100px-NASA_logo.svg.png", country: "US", countryName: "États-Unis", flag: "🇺🇸", lang: "EN", cat: "Documentaire", stream: "https://www.nasa.gov/nasatv/" },
+  // GERMANY
+  { id: 26, name: "DW News", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/75/Deutsche_Welle_symbol_2012.svg/120px-Deutsche_Welle_symbol_2012.svg.png", country: "DE", countryName: "Allemagne", flag: "🇩🇪", lang: "DE/EN", cat: "News", stream: "https://www.dw.com/fr/programme-de-television-en-direct/s-3519574" },
+  { id: 27, name: "ARD", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/ARD_Logo.svg/100px-ARD_Logo.svg.png", country: "DE", countryName: "Allemagne", flag: "🇩🇪", lang: "DE", cat: "Divertissement", stream: "https://www.ardmediathek.de/live" },
+  { id: 28, name: "ZDF", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/ZDF_logo.svg/100px-ZDF_logo.svg.png", country: "DE", countryName: "Allemagne", flag: "🇩🇪", lang: "DE", cat: "Divertissement", stream: "https://www.zdf.de/live-tv" },
+  // SPAIN
+  { id: 29, name: "RTVE", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/RTVE_logo.svg/120px-RTVE_logo.svg.png", country: "ES", countryName: "Espagne", flag: "🇪🇸", lang: "ES", cat: "Divertissement", stream: "https://www.rtve.es/play/videos/directo/la-1/" },
+  { id: 30, name: "Antena 3", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Antena_3_2021_logo.svg/100px-Antena_3_2021_logo.svg.png", country: "ES", countryName: "Espagne", flag: "🇪🇸", lang: "ES", cat: "Divertissement", stream: "https://www.antena3.com/directo" },
+  // ARAB WORLD
+  { id: 31, name: "Al Jazeera", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Al_Jazeera_Media_Network_Logo.svg/120px-Al_Jazeera_Media_Network_Logo.svg.png", country: "AR_WORLD", countryName: "Monde Arabe", flag: "🇦🇪", lang: "AR/EN", cat: "News", stream: "https://www.aljazeera.com/live/" },
+  { id: 32, name: "Al Arabiya", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/16/Alarabiya_logo.svg/120px-Alarabiya_logo.svg.png", country: "AR_WORLD", countryName: "Monde Arabe", flag: "🇦🇪", lang: "AR", cat: "News", stream: "https://live.alarabiya.net/" },
+  { id: 33, name: "MBC", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f1/MBC_Group_logo.svg/120px-MBC_Group_logo.svg.png", country: "AR_WORLD", countryName: "Monde Arabe", flag: "🇦🇪", lang: "AR", cat: "Divertissement", stream: "https://www.mbc.net/ar/mbc-channels/live-tv.html" },
+  // MAROC / ALGÉRIE / TUNISIE
+  { id: 34, name: "2M Maroc", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d1/2M_logo.svg/100px-2M_logo.svg.png", country: "MA", countryName: "Maroc", flag: "🇲🇦", lang: "AR/FR", cat: "Divertissement", stream: "https://www.2m.ma/fr/live/" },
+  { id: 35, name: "ENTV Algérie", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d5/ENTV_logo.svg/100px-ENTV_logo.svg.png", country: "DZ", countryName: "Algérie", flag: "🇩🇿", lang: "AR", cat: "Divertissement", stream: "https://www.entv.dz/" },
+  { id: 36, name: "Watania 1 TN", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/28/Tv-watania-1-logo.svg/100px-Tv-watania-1-logo.svg.png", country: "TN", countryName: "Tunisie", flag: "🇹🇳", lang: "AR", cat: "Divertissement", stream: "https://www.watania1.tn/direct" },
+  // RUSSIA
+  { id: 37, name: "RT News", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/RT_logo_new_2023.svg/120px-RT_logo_new_2023.svg.png", country: "RU", countryName: "Russie", flag: "🇷🇺", lang: "RU/EN", cat: "News", stream: "https://www.rt.com/on-air/" },
+  // JAPAN
+  { id: 38, name: "NHK World", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/NHK_World_TV_Logo_2019.svg/120px-NHK_World_TV_Logo_2019.svg.png", country: "JP", countryName: "Japon", flag: "🇯🇵", lang: "EN/JA", cat: "News", stream: "https://www3.nhk.or.jp/nhkworld/en/live/" },
+  // INDIA
+  { id: 39, name: "NDTV", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/63/NDTV_logo.svg/120px-NDTV_logo.svg.png", country: "IN", countryName: "Inde", flag: "🇮🇳", lang: "EN", cat: "News", stream: "https://www.ndtv.com/video/live/channel/ndtv24x7" },
+  // TURKEY
+  { id: 40, name: "TRT World", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e9/TRT_World_logo.svg/120px-TRT_World_logo.svg.png", country: "TR", countryName: "Turquie", flag: "🇹🇷", lang: "EN/TR", cat: "News", stream: "https://www.trtworld.com/watch" },
+  // BRAZIL
+  { id: 41, name: "Globo News", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/GloboNews_2021.svg/120px-GloboNews_2021.svg.png", country: "BR", countryName: "Brésil", flag: "🇧🇷", lang: "PT", cat: "News", stream: "https://globoplay.globo.com/ao-vivo/globonews/" },
+  // INTERNATIONAL
+  { id: 42, name: "Eurosport", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Eurosport_logo_2015.svg/120px-Eurosport_logo_2015.svg.png", country: "FR", countryName: "France", flag: "🇫🇷", lang: "FR/EN", cat: "Sport", stream: "https://www.eurosport.fr/live/" },
+  { id: 43, name: "Euronews EN", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/37/Euronews_logo.svg/120px-Euronews_logo.svg.png", country: "GB", countryName: "Royaume-Uni", flag: "🇬🇧", lang: "EN", cat: "News", stream: "https://www.euronews.com/live" },
+  { id: 44, name: "CGTN", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/CGTN_Logo.svg/120px-CGTN_Logo.svg.png", country: "CN", countryName: "Chine", flag: "🇨🇳", lang: "EN/ZH", cat: "News", stream: "https://www.cgtn.com/live" },
+  { id: 45, name: "ABC Australia", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/1a/ABC_Logo_2021.svg/100px-ABC_Logo_2021.svg.png", country: "AU", countryName: "Australie", flag: "🇦🇺", lang: "EN", cat: "News", stream: "https://iview.abc.net.au/live/news24" },
+
+  // ====== SÉNÉGAL ======
+  { id: 46, name: "RTS1", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b7/Radiodiffusion_T%C3%A9l%C3%A9vision_S%C3%A9n%C3%A9galaise_logo.svg/120px-Radiodiffusion_T%C3%A9l%C3%A9vision_S%C3%A9n%C3%A9galaise_logo.svg.png", country: "SN", countryName: "Sénégal", flag: "🇸🇳", lang: "FR/WO", cat: "Divertissement", stream: "https://www.rts.sn/rts1-direct" },
+  { id: 47, name: "TFM Sénégal", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/TFM_S%C3%A9n%C3%A9gal_logo.svg/120px-TFM_S%C3%A9n%C3%A9gal_logo.svg.png", country: "SN", countryName: "Sénégal", flag: "🇸🇳", lang: "FR/WO", cat: "Divertissement", stream: "https://www.tfm.sn/live" },
+  { id: 48, name: "2STV", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/08/2STV_logo.png/120px-2STV_logo.png", country: "SN", countryName: "Sénégal", flag: "🇸🇳", lang: "FR/WO", cat: "Divertissement", stream: "https://www.2stv.sn/live" },
+  { id: 49, name: "Sen TV", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/Sen_TV_logo.png/100px-Sen_TV_logo.png", country: "SN", countryName: "Sénégal", flag: "🇸🇳", lang: "WO/FR", cat: "News", stream: "https://www.sentv.sn/direct" },
+  { id: 50, name: "Walf TV", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e7/Walf_TV_Logo.png/100px-Walf_TV_Logo.png", country: "SN", countryName: "Sénégal", flag: "🇸🇳", lang: "WO/FR", cat: "News", stream: "https://www.walftv.com/live" },
+  { id: 51, name: "7TV Sénégal", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/7TV_Senegal.png/100px-7TV_Senegal.png", country: "SN", countryName: "Sénégal", flag: "🇸🇳", lang: "FR/WO", cat: "Divertissement", stream: "https://www.7tv.sn/direct" },
+
+  // ====== CÔTE D'IVOIRE ======
+  { id: 52, name: "RTI 1", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/RTI_1_logo.png/120px-RTI_1_logo.png", country: "CI", countryName: "Côte d'Ivoire", flag: "🇨🇮", lang: "FR", cat: "Divertissement", stream: "https://www.rti.ci/live/rti1" },
+  { id: 53, name: "RTI 2", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f8/RTI_2_logo.png/120px-RTI_2_logo.png", country: "CI", countryName: "Côte d'Ivoire", flag: "🇨🇮", lang: "FR", cat: "Divertissement", stream: "https://www.rti.ci/live/rti2" },
+  { id: 54, name: "NCI Côte d'Ivoire", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/NCI_TV_Logo.png/100px-NCI_TV_Logo.png", country: "CI", countryName: "Côte d'Ivoire", flag: "🇨🇮", lang: "FR", cat: "Divertissement", stream: "https://www.nci.tv/live" },
+  { id: 55, name: "La 3 CI", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/La_3_CI.png/100px-La_3_CI.png", country: "CI", countryName: "Côte d'Ivoire", flag: "🇨🇮", lang: "FR", cat: "Divertissement", stream: "https://www.la3.ci/direct" },
+  { id: 56, name: "A+ Ivoire", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/A%2B_Ivoire_logo.png/100px-A%2B_Ivoire_logo.png", country: "CI", countryName: "Côte d'Ivoire", flag: "🇨🇮", lang: "FR", cat: "Divertissement", stream: "https://www.aplusivoire.com/live" },
+  { id: 57, name: "Canal+ Côte d'Ivoire", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Canal%2B_France_2019.svg/120px-Canal%2B_France_2019.svg.png", country: "CI", countryName: "Côte d'Ivoire", flag: "🇨🇮", lang: "FR", cat: "Cinéma", stream: "https://www.canalplus-afrique.com/cote-divoire/direct" },
+
+  // ====== MALI ======
+  { id: 58, name: "ORTM Mali", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/ORTM_logo.png/120px-ORTM_logo.png", country: "ML", countryName: "Mali", flag: "🇲🇱", lang: "FR/BM", cat: "Divertissement", stream: "https://www.ortm.ml/live" },
+  { id: 59, name: "Africable TV", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Africable_logo.png/120px-Africable_logo.png", country: "ML", countryName: "Mali", flag: "🇲🇱", lang: "FR", cat: "Divertissement", stream: "https://www.africable.tv/direct" },
+  { id: 60, name: "Joliba TV News", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Joliba_TV_News.png/100px-Joliba_TV_News.png", country: "ML", countryName: "Mali", flag: "🇲🇱", lang: "FR/BM", cat: "News", stream: "https://www.jolibatv.com/live" },
+  { id: 61, name: "Maliactu TV", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Maliactu_TV.png/100px-Maliactu_TV.png", country: "ML", countryName: "Mali", flag: "🇲🇱", lang: "FR", cat: "News", stream: "https://www.maliactu.net/tv-direct" },
+
+  // ====== BURKINA FASO ======
+  { id: 62, name: "RTB Burkina", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/RTB_logo.png/120px-RTB_logo.png", country: "BF", countryName: "Burkina Faso", flag: "🇧🇫", lang: "FR", cat: "Divertissement", stream: "https://www.rtb.bf/direct" },
+  { id: 63, name: "BF1", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/BF1_logo.png/100px-BF1_logo.png", country: "BF", countryName: "Burkina Faso", flag: "🇧🇫", lang: "FR", cat: "Divertissement", stream: "https://www.bf1.bf/direct" },
+  { id: 64, name: "TNB Burkina", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fa/TNB_logo.png/100px-TNB_logo.png", country: "BF", countryName: "Burkina Faso", flag: "🇧🇫", lang: "FR", cat: "News", stream: "https://www.tnb.bf/direct" },
+  { id: 65, name: "Canal 3 Burkina", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/35/Canal3_Burkina.png/100px-Canal3_Burkina.png", country: "BF", countryName: "Burkina Faso", flag: "🇧🇫", lang: "FR", cat: "Divertissement", stream: "https://www.canal3.bf/direct" },
+
+  // ====== GUINÉE ======
+  { id: 66, name: "RTG Guinée", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/RTG_logo.png/120px-RTG_logo.png", country: "GN", countryName: "Guinée", flag: "🇬🇳", lang: "FR", cat: "Divertissement", stream: "https://www.rtg.gn/direct" },
+  { id: 67, name: "Espace TV Guinée", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Espace_TV_Guinee.png/100px-Espace_TV_Guinee.png", country: "GN", countryName: "Guinée", flag: "🇬🇳", lang: "FR", cat: "Divertissement", stream: "https://www.espacetv.net/direct" },
+  { id: 68, name: "Evasion TV Guinée", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/34/Evasion_TV.png/100px-Evasion_TV.png", country: "GN", countryName: "Guinée", flag: "🇬🇳", lang: "FR", cat: "Divertissement", stream: "https://www.evasiontv.net/direct" },
+  { id: 69, name: "FIM FM TV", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Fim_FM.png/100px-Fim_FM.png", country: "GN", countryName: "Guinée", flag: "🇬🇳", lang: "FR/PL", cat: "Musique", stream: "https://www.fimfm.net/tv" },
+
+  // ====== GHANA ======
+  { id: 70, name: "GTV Ghana", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/00/GTV_Ghana.png/120px-GTV_Ghana.png", country: "GH", countryName: "Ghana", flag: "🇬🇭", lang: "EN", cat: "Divertissement", stream: "https://www.gtv.com.gh/live" },
+  { id: 71, name: "TV3 Ghana", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/TV3_Ghana_logo.png/120px-TV3_Ghana_logo.png", country: "GH", countryName: "Ghana", flag: "🇬🇭", lang: "EN", cat: "Divertissement", stream: "https://www.tv3ghana.com/live" },
+  { id: 72, name: "Adom TV", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Adom_TV_logo.png/120px-Adom_TV_logo.png", country: "GH", countryName: "Ghana", flag: "🇬🇭", lang: "TW/EN", cat: "Divertissement", stream: "https://www.adomonline.com/live-tv" },
+  { id: 73, name: "JoyNews Ghana", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Joy_News_Ghana.png/120px-Joy_News_Ghana.png", country: "GH", countryName: "Ghana", flag: "🇬🇭", lang: "EN", cat: "News", stream: "https://www.myjoyonline.com/live" },
+  { id: 74, name: "Citi TV Ghana", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Citi_TV_Ghana.png/100px-Citi_TV_Ghana.png", country: "GH", countryName: "Ghana", flag: "🇬🇭", lang: "EN", cat: "News", stream: "https://www.citinewsroom.com/live-stream" },
+
+  // ====== NIGERIA ======
+  { id: 75, name: "NTA Nigeria", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/NTA_logo.svg/120px-NTA_logo.svg.png", country: "NG", countryName: "Nigeria", flag: "🇳🇬", lang: "EN", cat: "Divertissement", stream: "https://www.nta.ng/live" },
+  { id: 76, name: "Channels TV", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Channels_Television_logo.png/120px-Channels_Television_logo.png", country: "NG", countryName: "Nigeria", flag: "🇳🇬", lang: "EN", cat: "News", stream: "https://www.channelstv.com/home/stream-2/" },
+  { id: 77, name: "TVC Nigeria", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/TVC_News_Nigeria.png/120px-TVC_News_Nigeria.png", country: "NG", countryName: "Nigeria", flag: "🇳🇬", lang: "EN", cat: "News", stream: "https://www.tvcnews.tv/live" },
+  { id: 78, name: "Africa Magic", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3d/Africa_Magic_logo.png/120px-Africa_Magic_logo.png", country: "NG", countryName: "Nigeria", flag: "🇳🇬", lang: "EN", cat: "Divertissement", stream: "https://www.africamagic.tv/live" },
+  { id: 79, name: "Arise TV", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Arise_News_logo.png/120px-Arise_News_logo.png", country: "NG", countryName: "Nigeria", flag: "🇳🇬", lang: "EN", cat: "News", stream: "https://www.arise.tv/live" },
+  { id: 80, name: "Silverbird TV", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Silverbird_TV_Logo.png/100px-Silverbird_TV_Logo.png", country: "NG", countryName: "Nigeria", flag: "🇳🇬", lang: "EN", cat: "Divertissement", stream: "https://www.silverbirdtv.com/live" },
+
+  // ====== CAMEROUN ======
+  { id: 81, name: "CRTV Cameroun", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/ca/CRTV_logo.png/120px-CRTV_logo.png", country: "CM", countryName: "Cameroun", flag: "🇨🇲", lang: "FR/EN", cat: "Divertissement", stream: "https://www.crtv.cm/direct" },
+  { id: 82, name: "Equinoxe TV", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/92/Equinoxe_TV_Logo.png/100px-Equinoxe_TV_Logo.png", country: "CM", countryName: "Cameroun", flag: "🇨🇲", lang: "FR", cat: "News", stream: "https://www.equinoxetv.com/direct" },
+  { id: 83, name: "STV Cameroun", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/STV_Cameroun.png/100px-STV_Cameroun.png", country: "CM", countryName: "Cameroun", flag: "🇨🇲", lang: "FR/EN", cat: "Divertissement", stream: "https://www.stvcameroun.com/direct" },
+  { id: 84, name: "Canal 2 International", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/85/Canal_2_International.png/100px-Canal_2_International.png", country: "CM", countryName: "Cameroun", flag: "🇨🇲", lang: "FR", cat: "Divertissement", stream: "https://www.canal2international.com/direct" },
+
+  // ====== BÉNIN ======
+  { id: 85, name: "ORTB Bénin", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5c/ORTB_logo.png/100px-ORTB_logo.png", country: "BJ", countryName: "Bénin", flag: "🇧🇯", lang: "FR", cat: "Divertissement", stream: "https://www.ortb.bj/direct" },
+  { id: 86, name: "Golf TV Bénin", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Golf_TV_Benin.png/100px-Golf_TV_Benin.png", country: "BJ", countryName: "Bénin", flag: "🇧🇯", lang: "FR/FON", cat: "Divertissement", stream: "https://www.golftv.bj/direct" },
+  { id: 87, name: "Canal 3 Bénin", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/Canal3_Benin.png/100px-Canal3_Benin.png", country: "BJ", countryName: "Bénin", flag: "🇧🇯", lang: "FR", cat: "News", stream: "https://www.canal3benin.com/direct" },
+
+  // ====== TOGO ======
+  { id: 88, name: "TVT Togo", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/TVT_Togo_logo.png/100px-TVT_Togo_logo.png", country: "TG", countryName: "Togo", flag: "🇹🇬", lang: "FR", cat: "Divertissement", stream: "https://www.tvt.tg/direct" },
+  { id: 89, name: "La Nouvelle TV Togo", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/La_Nouvelle_TV.png/100px-La_Nouvelle_TV.png", country: "TG", countryName: "Togo", flag: "🇹🇬", lang: "FR", cat: "News", stream: "https://www.lanouvelletv.tg/direct" },
+  { id: 90, name: "Tempo Togo", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Tempo_TV_Togo.png/100px-Tempo_TV_Togo.png", country: "TG", countryName: "Togo", flag: "🇹🇬", lang: "FR", cat: "Musique", stream: "https://www.tempotogo.com/direct" },
+
+  // ====== NIGER ======
+  { id: 91, name: "ORTN Niger", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/ORTN_logo.png/100px-ORTN_logo.png", country: "NE", countryName: "Niger", flag: "🇳🇪", lang: "FR/HA", cat: "Divertissement", stream: "https://www.ortn.ne/direct" },
+  { id: 92, name: "Télé Sahel", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4d/Tele_Sahel.png/100px-Tele_Sahel.png", country: "NE", countryName: "Niger", flag: "🇳🇪", lang: "FR", cat: "Divertissement", stream: "https://www.telesahel.ne/direct" },
+  { id: 93, name: "Bonferey TV Niger", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7c/Bonferey_TV.png/100px-Bonferey_TV.png", country: "NE", countryName: "Niger", flag: "🇳🇪", lang: "FR/HA", cat: "News", stream: "https://www.bonferey.ne/direct" },
+
+  // Pan-africain
+  { id: 94, name: "Africa24", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/72/Africa24_logo.png/120px-Africa24_logo.png", country: "SN", countryName: "Sénégal", flag: "🇸🇳", lang: "FR", cat: "News", stream: "https://www.africa24.tv/direct" },
+  { id: 95, name: "TV5 Monde Afrique", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/33/TV5_Monde_logo.svg/120px-TV5_Monde_logo.svg.png", country: "CI", countryName: "Côte d'Ivoire", flag: "🇨🇮", lang: "FR", cat: "Divertissement", stream: "https://www.tv5monde.com/television/direct" },
+];
+
+// =====================
+// STATE
+// =====================
+let activeCountry = null;
+let activeCat = "all";
+let searchQ = "";
+let selectedChannel = null;
+
+// =====================
+// RENDER SIDEBAR
+// =====================
+function renderSidebar() {
+  const sidebar = document.getElementById("sidebar");
+  sidebar.innerHTML = "";
+
+  // "All" option
+  const allItem = document.createElement("div");
+  allItem.className = "country-item" + (activeCountry === null ? " active" : "");
+  allItem.innerHTML = `<span class="country-flag">🌍</span><span class="country-name">Monde entier</span><span class="country-count">${CHANNELS.length}</span>`;
+  allItem.onclick = () => { activeCountry = null; renderAll(); };
+  sidebar.appendChild(allItem);
+
+  REGIONS.forEach(region => {
+    const hdr = document.createElement("div");
+    hdr.className = "region-header";
+    hdr.textContent = region.name;
+    sidebar.appendChild(hdr);
+
+    region.countries.forEach(c => {
+      const count = CHANNELS.filter(ch => ch.country === c.code).length;
+      if (!count) return;
+      const item = document.createElement("div");
+      item.className = "country-item" + (activeCountry === c.code ? " active" : "");
+      item.innerHTML = `<span class="country-flag">${c.flag}</span><span class="country-name">${c.name}</span><span class="country-count">${count}</span>`;
+      item.onclick = () => { activeCountry = c.code; renderAll(); };
+      sidebar.appendChild(item);
+    });
+  });
+}
+
+// =====================
+// FILTER CHANNELS
+// =====================
+function getFiltered() {
+  return CHANNELS.filter(ch => {
+    const matchCountry = !activeCountry || ch.country === activeCountry;
+    const matchCat = activeCat === "all" || ch.cat === activeCat;
+    const matchSearch = !searchQ || ch.name.toLowerCase().includes(searchQ) || ch.countryName.toLowerCase().includes(searchQ);
+    return matchCountry && matchCat && matchSearch;
+  });
+}
+
+// =====================
+// RENDER CHANNELS
+// =====================
+function renderChannels() {
+  const grid = document.getElementById("channels-grid");
+  const filtered = getFiltered();
+  document.getElementById("count").textContent = filtered.length;
+  grid.innerHTML = "";
+
+  if (!filtered.length) {
+    grid.innerHTML = `<div class="empty" style="grid-column:1/-1"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><p>Aucune chaîne trouvée</p></div>`;
+    return;
+  }
+
+  filtered.forEach(ch => {
+    const card = document.createElement("div");
+    card.className = "channel-card";
+    card.innerHTML = `
+      <div class="ch-logo">
+        <img src="${ch.logo}" alt="${ch.name}" onerror="this.parentElement.textContent='${ch.flag}'" />
+      </div>
+      <div class="ch-name">${ch.name}</div>
+      <div class="ch-category">${ch.cat}</div>
+      <div class="ch-lang">${ch.lang}</div>
+    `;
+    card.onclick = () => openModal(ch);
+    grid.appendChild(card);
+  });
+}
+
+// =====================
+// TITLE
+// =====================
+function renderTitle() {
+  let title = "🌍 Monde entier";
+  let sub = "Toutes les chaînes disponibles";
+
+  if (activeCountry) {
+    const allCountries = REGIONS.flatMap(r => r.countries);
+    const c = allCountries.find(c => c.code === activeCountry);
+    if (c) {
+      title = `${c.flag} ${c.name}`;
+      sub = `Chaînes disponibles pour ${c.name}`;
+    }
+  }
+  document.getElementById("area-title").innerHTML = title;
+  document.getElementById("area-sub").textContent = sub;
+}
+
+function renderAll() {
+  renderSidebar();
+  renderTitle();
+  renderChannels();
+}
+
+// =====================
+// MODAL
+// =====================
+function openModal(ch) {
+  selectedChannel = ch;
+  document.getElementById("modal-name").textContent = ch.name;
+  document.getElementById("modal-flag").textContent = ch.flag;
+  const logo = document.getElementById("modal-logo");
+  logo.innerHTML = `<img src="${ch.logo}" alt="${ch.name}" style="width:100%;height:100%;object-fit:contain" onerror="this.parentElement.textContent='${ch.flag}'" />`;
+  document.getElementById("info-country").textContent = `${ch.flag} ${ch.countryName}`;
+  document.getElementById("info-cat").textContent = ch.cat;
+  document.getElementById("info-lang").textContent = ch.lang;
+  document.getElementById("stream-url").href = ch.stream;
+  document.getElementById("stream-url").textContent = "▶ OUVRIR LE FLUX EN DIRECT";
+  document.getElementById("modal-overlay").classList.add("open");
+}
+
+document.getElementById("modal-close").onclick = () => {
+  document.getElementById("modal-overlay").classList.remove("open");
+};
+document.getElementById("modal-overlay").onclick = (e) => {
+  if (e.target === document.getElementById("modal-overlay")) {
+    document.getElementById("modal-overlay").classList.remove("open");
+  }
+};
+
+// =====================
+// FILTERS
+// =====================
+document.getElementById("categories").addEventListener("click", e => {
+  const btn = e.target.closest(".filter-btn");
+  if (!btn) return;
+  document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  activeCat = btn.dataset.cat;
+  renderChannels();
+});
+
+document.getElementById("search").addEventListener("input", e => {
+  searchQ = e.target.value.trim().toLowerCase();
+  renderChannels();
+});
+
+// =====================
+// TICKER
+// =====================
+function buildTicker() {
+  const items = CHANNELS.map(ch => `${ch.flag} ${ch.name}`).join("  ·  ");
+  const full = items + "  ·  " + items;
+  const el = document.getElementById("ticker-text");
+  el.textContent = full;
+}
+
+// =====================
+// INIT
+// =====================
+buildTicker();
+renderAll();
+</script>
+</body>
+</html>
